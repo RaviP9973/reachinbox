@@ -106,7 +106,7 @@ export default function DashboardPage() {
           
           <h3 className="font-semibold text-gray-900 mb-2">How to fix this:</h3>
           <ol className="list-decimal pl-5 space-y-3 text-sm text-gray-700">
-            <li><strong>Did you redeploy Vercel?</strong> Even if you added <code className="bg-gray-100 px-1 py-0.5 rounded">NEXT_PUBLIC_API_URL</code> in Vercel settings, you MUST go to Deployments -> Redeploy to apply it.</li>
+            <li><strong>Did you redeploy Vercel?</strong> Even if you added <code className="bg-gray-100 px-1 py-0.5 rounded">NEXT_PUBLIC_API_URL</code> in Vercel settings, you MUST go to Deployments - Redeploy to apply it.</li>
             <li><strong>Did you add the Client ID to Render?</strong> Make sure <code className="bg-gray-100 px-1 py-0.5 rounded">GOOGLE_CLIENT_ID</code> is saved in your <strong>Render</strong> environment variables so it can verify the login.</li>
             <li><strong>After fixing those:</strong> Click the button below to clear your broken session and try again!</li>
           </ol>
