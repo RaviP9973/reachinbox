@@ -113,8 +113,9 @@ export default function DashboardPage() {
           
           <button 
             onClick={() => {
-              document.cookie = "next-auth.session-token=; path=/; expires=Thu, 01 Jan 1970 00:00:01 GMT";
-              window.location.href = "/";
+              import("next-auth/react").then(({ signOut }) => {
+                signOut({ callbackUrl: "/" });
+              });
             }}
             className="mt-8 w-full bg-red-600 text-white font-medium py-3 px-4 rounded-lg hover:bg-red-700 transition-colors"
           >
