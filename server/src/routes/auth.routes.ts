@@ -12,41 +12,68 @@ const googleClient = new OAuth2Client(config.auth.googleClientId);
  * Verify Google ID token, upsert user, return JWT
  */
 router.post("/google", async (req: Request, res: Response): Promise<void> => {
+  console.log("---- BACKEND AUTH DEBUG START ----");
+  console.log("Received POST /api/auth/google");
   try {
     const { credential } = req.body;
 
     if (!credential) {
+      console.error("Error: Missing Google credential token in request body");
       res.status(400).json({ error: "Missing Google credential token" });
       return;
     }
 
-    // Verify the Google ID token
-    const ticket = await googleClient.verifyIdToken({
-      idToken: credential,
-      audience: config.auth.googleClientId,
-    });
+    console.log("Google Client ID configured as:", config.auth.googleClientId ? "Set (starts with " + config.auth.googleClientId.substring(0, 10) + "...)" : "MISSING!");
 
-    const payload = ticket.getPayload();
-    if (!payload || !payload.email) {
-      res.status(400).json({ error: "Invalid Google token" });
+    // Verify the Google ID token
+    let ticket;
+    try {
+      console.log("Attempting to verify ID token with Google...");
+      ticket = await googleClient.verifyIdToken({
+        idToken: credential,
+        audience: config.auth.googleClientId,
+      });
+      console.log("Google token verified successfully!");
+    } catch (verifyError: any) {
+      console.error("Failed to verify Google token:", verifyError.message);
+      res.status(400).json({ error: "Invalid Google token structure/signature" });
       return;
     }
 
+    const payload = ticket.getPayload();
+    if (!payload || !payload.email) {
+      console.error("Payload or email missing from verified token");
+      res.status(400).json({ error: "Invalid Google token payload" });
+      return;
+    }
+    
+    console.log(`Token belongs to email: ${payload.email}`);
+
     // Upsert user in database
-    const user = await prisma.user.upsert({
-      where: { email: payload.email },
-      update: {
-        name: payload.name || null,
-        avatar: payload.picture || null,
-      },
-      create: {
-        email: payload.email,
-        name: payload.name || null,
-        avatar: payload.picture || null,
-      },
-    });
+    console.log("Attempting database upsert...");
+    let user;
+    try {
+      user = await prisma.user.upsert({
+        where: { email: payload.email },
+        update: {
+          name: payload.name || null,
+          avatar: payload.picture || null,
+        },
+        create: {
+          email: payload.email,
+          name: payload.name || null,
+          avatar: payload.picture || null,
+        },
+      });
+      console.log(`Database upsert successful for user ID: ${user.id}`);
+    } catch (dbError: any) {
+      console.error("Database upsert failed! Error:", dbError.message);
+      res.status(500).json({ error: "Database operation failed during login" });
+      return;
+    }
 
     // Generate JWT
+    console.log("Generating JWT...");
     const token = jwt.sign(
       {
         userId: user.id,
@@ -56,6 +83,7 @@ router.post("/google", async (req: Request, res: Response): Promise<void> => {
       config.auth.jwtSecret,
       { expiresIn: "7d" }
     );
+    console.log("JWT generated successfully. Returning 200 OK.");
 
     res.json({
       token,
@@ -67,8 +95,10 @@ router.post("/google", async (req: Request, res: Response): Promise<void> => {
       },
     });
   } catch (error: any) {
-    console.error("Google auth error:", error.message);
+    console.error("Catch-all Google auth error:", error.message || error);
     res.status(500).json({ error: "Authentication failed" });
+  } finally {
+    console.log("---- BACKEND AUTH DEBUG END ----");
   }
 });
 

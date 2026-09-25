@@ -21,21 +21,41 @@ export const authOptions: NextAuthOptions = {
 
         // Exchange Google token for our backend JWT
         try {
+          const apiUrl = process.env.NEXT_PUBLIC_API_URL;
+          console.log("---- NEXTAUTH DEBUG START ----");
+          console.log("NEXT_PUBLIC_API_URL value:", apiUrl);
+          
+          if (!apiUrl) {
+            console.error("FATAL: NEXT_PUBLIC_API_URL is undefined!");
+          }
+
+          const targetEndpoint = `${apiUrl}/api/auth/google`;
+          console.log("Attempting to fetch from:", targetEndpoint);
+
           const res = await fetch(
-            `${process.env.NEXT_PUBLIC_API_URL}/api/auth/google`,
+            targetEndpoint,
             {
               method: "POST",
               headers: { "Content-Type": "application/json" },
               body: JSON.stringify({ credential: account.id_token }),
             }
           );
+          
+          console.log("Backend responded with status:", res.status);
+          
           if (res.ok) {
             const data = await res.json();
             token.backendToken = data.token;
             token.userId = data.user.id;
+            console.log("Successfully received backendToken!");
+          } else {
+            const errText = await res.text();
+            console.error("Backend auth failed! Error response:", errText);
           }
-        } catch (error) {
-          console.error("Backend auth error:", error);
+          console.log("---- NEXTAUTH DEBUG END ----");
+        } catch (error: any) {
+          console.error("Backend auth exception caught:", error.message || error);
+          console.log("---- NEXTAUTH DEBUG END ----");
         }
       }
       return token;
