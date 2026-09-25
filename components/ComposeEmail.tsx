@@ -168,14 +168,73 @@ export default function ComposeEmail({
             </svg>
           </button>
           {/* Schedule icon */}
-          <button
-            onClick={() => setShowDatePicker(!showDatePicker)}
-            className="p-2 text-text-muted hover:text-text-primary hover:bg-gray-100 rounded-lg transition-colors cursor-pointer"
-          >
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-            </svg>
-          </button>
+          <div className="relative">
+            <button
+              onClick={() => setShowDatePicker(!showDatePicker)}
+              className="p-2 text-text-muted hover:text-text-primary hover:bg-gray-100 rounded-lg transition-colors cursor-pointer"
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+            </button>
+            {showDatePicker && (
+              <div className="absolute right-0 top-full mt-2 w-[280px] p-4 border border-border rounded-lg bg-white shadow-xl z-50 animate-slide-up">
+                <h3 className="text-sm font-semibold text-text-primary mb-3">
+                  Send Later
+                </h3>
+                <div className="mb-3">
+                  <label className="text-xs text-text-muted mb-1 block">
+                    Pick date & time
+                  </label>
+                  <input
+                    type="datetime-local"
+                    value={scheduledAt}
+                    onChange={(e) => setScheduledAt(e.target.value)}
+                    min={new Date().toISOString().slice(0, 16)}
+                    className="w-full px-3 py-2 text-sm border border-border rounded-lg outline-none focus:border-primary transition-colors"
+                  />
+                </div>
+                <div className="flex flex-col gap-1.5 mb-4">
+                  {getQuickOptions().map((opt) => (
+                    <button
+                      key={opt.label}
+                      onClick={() => {
+                        const d = new Date(opt.value);
+                        const local = new Date(
+                          d.getTime() - d.getTimezoneOffset() * 60000
+                        )
+                          .toISOString()
+                          .slice(0, 16);
+                        setScheduledAt(local);
+                      }}
+                      className="text-left px-3 py-1.5 text-sm text-text-secondary hover:bg-gray-50 rounded transition-colors cursor-pointer"
+                    >
+                      {opt.label}
+                    </button>
+                  ))}
+                </div>
+                <div className="flex gap-2 justify-end">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => {
+                      setShowDatePicker(false);
+                      setScheduledAt("");
+                    }}
+                  >
+                    Cancel
+                  </Button>
+                  <Button
+                    variant="primary"
+                    size="sm"
+                    onClick={() => setShowDatePicker(false)}
+                  >
+                    Done
+                  </Button>
+                </div>
+              </div>
+            )}
+          </div>
           <Button
             variant="primary"
             size="sm"
@@ -286,65 +345,6 @@ export default function ComposeEmail({
               className="w-full text-sm outline-none bg-transparent text-text-primary placeholder:text-text-muted resize-none leading-relaxed"
             />
           </div>
-
-          {/* Schedule date picker */}
-          {showDatePicker && (
-            <div className="mx-6 mb-4 p-4 border border-border rounded-lg bg-white shadow-lg animate-slide-up">
-              <h3 className="text-sm font-semibold text-text-primary mb-3">
-                Send Later
-              </h3>
-              <div className="mb-3">
-                <label className="text-xs text-text-muted mb-1 block">
-                  Pick date & time
-                </label>
-                <input
-                  type="datetime-local"
-                  value={scheduledAt}
-                  onChange={(e) => setScheduledAt(e.target.value)}
-                  min={new Date().toISOString().slice(0, 16)}
-                  className="w-full px-3 py-2 text-sm border border-border rounded-lg outline-none focus:border-primary transition-colors"
-                />
-              </div>
-              <div className="flex flex-col gap-1.5 mb-4">
-                {getQuickOptions().map((opt) => (
-                  <button
-                    key={opt.label}
-                    onClick={() => {
-                      const d = new Date(opt.value);
-                      const local = new Date(
-                        d.getTime() - d.getTimezoneOffset() * 60000
-                      )
-                        .toISOString()
-                        .slice(0, 16);
-                      setScheduledAt(local);
-                    }}
-                    className="text-left px-3 py-1.5 text-sm text-text-secondary hover:bg-gray-50 rounded transition-colors cursor-pointer"
-                  >
-                    {opt.label}
-                  </button>
-                ))}
-              </div>
-              <div className="flex gap-2 justify-end">
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => {
-                    setShowDatePicker(false);
-                    setScheduledAt("");
-                  }}
-                >
-                  Cancel
-                </Button>
-                <Button
-                  variant="primary"
-                  size="sm"
-                  onClick={() => setShowDatePicker(false)}
-                >
-                  Done
-                </Button>
-              </div>
-            </div>
-          )}
 
           {/* Bottom toolbar with formatting icons (visual only) */}
           <div className="px-6 py-2 border-t border-border-light flex items-center gap-1">
